@@ -138,3 +138,89 @@ theorem single_expense_conservation
     (hshares : Pure.sumTo shares n = amount) :
     sumDeltas paidBy amount shares n = 0 := by
   rw [sumDeltas_with_payer _ _ _ _ hpayer, hshares]; omega
+
+-- ══════════════════════════════════════════════════════════════
+-- Global conservation: sum of all balances across all members is zero
+-- ══════════════════════════════════════════════════════════════
+
+/-- Balance for member m from one expense -/
+def balanceFromExpense (e : Expense) (m : Nat) : Int :=
+  Pure.expenseDelta e.paidBy e.amount e.shares[m]! m
+
+/-- Balance for member m from all expenses [0, k) -/
+def balanceFromExpenses (expenses : Array Expense) (k : Nat) (m : Nat) : Int :=
+  if k = 0 then 0
+  else balanceFromExpenses expenses (k - 1) m + balanceFromExpense expenses[k - 1]! m
+
+/-- Sum of balances across members [0, n) from all expenses -/
+def sumBalances (expenses : Array Expense) (numExpenses : Nat) (n : Nat) : Int :=
+  if n = 0 then 0
+  else sumBalances expenses numExpenses (n - 1) + balanceFromExpenses expenses numExpenses (n - 1)
+
+/-- Sum of member deltas [0, n) for one expense -/
+def sumMemberDeltas (e : Expense) (n : Nat) : Int :=
+  sumDeltas e.paidBy e.amount e.shares n
+
+/-- Sum-swap: sumBalances = sum over expenses of sumMemberDeltas.
+    Each expense contributes zero (by single_expense_conservation),
+    so the total is zero. -/
+
+-- First prove the swap for one expense added
+theorem balanceFromExpenses_split (expenses : Array Expense) (k : Nat) (m : Nat) :
+    balanceFromExpenses expenses (k + 1) m =
+    balanceFromExpenses expenses k m + balanceFromExpense expenses[k]! m := by
+  conv_lhs => unfold balanceFromExpenses
+  simp [show ¬(k + 1 = 0) from by omega, show k + 1 - 1 = k from by omega]
+
+-- sumBalances distributes over expenses: adding one expense adds sumMemberDeltas
+theorem sumBalances_zero_expenses (expenses : Array Expense) (n : Nat) :
+    sumBalances expenses 0 n = 0 := by
+  induction n with
+  | zero => simp [sumBalances]
+  | succ k ih => simp [sumBalances, balanceFromExpenses, ih]
+
+-- Key swap: sumBalances with k+1 expenses = sumBalances with k + sumMemberDeltas of expense k
+theorem sumBalances_add_expense (expenses : Array Expense) (k n : Nat) :
+    sumBalances expenses (k + 1) n = sumBalances expenses k n + sumMemberDeltas expenses[k]! n := by
+  induction n with
+  | zero => simp [sumBalances, sumMemberDeltas, sumDeltas]
+  | succ m ih =>
+    -- LHS: sumBalances expenses (k+1) (m+1) = sumBalances expenses (k+1) m + balanceFromExpenses expenses (k+1) m
+    -- RHS: sumBalances expenses k (m+1) + sumMemberDeltas expenses[k]! (m+1)
+    --     = (sumBalances expenses k m + balanceFromExpenses expenses k m) + (sumMemberDeltas expenses[k]! m + expenseDelta ...)
+    -- By ih: sumBalances expenses (k+1) m = sumBalances expenses k m + sumMemberDeltas expenses[k]! m
+    -- Need: balanceFromExpenses expenses (k+1) m = balanceFromExpenses expenses k m + balanceFromExpense expenses[k]! m
+    -- which is balanceFromExpenses_split
+    conv_lhs => unfold sumBalances
+    simp only [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega, ↓reduceIte]
+    rw [balanceFromExpenses_split, ih]
+    have hbal : sumBalances expenses k (m + 1) =
+      sumBalances expenses k m + balanceFromExpenses expenses k m := by
+        conv_lhs => unfold sumBalances
+        simp [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega]
+    rw [hbal]
+    unfold sumMemberDeltas
+    have hsplit : sumDeltas expenses[k]!.paidBy expenses[k]!.amount expenses[k]!.shares (m + 1) =
+      sumDeltas expenses[k]!.paidBy expenses[k]!.amount expenses[k]!.shares m +
+      Pure.expenseDelta expenses[k]!.paidBy expenses[k]!.amount expenses[k]!.shares[m]! ↑m := by
+        conv_lhs => unfold sumDeltas
+        simp [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega, show (↑(m + 1) : Int) - 1 = ↑m from by omega]
+    rw [hsplit]
+    unfold balanceFromExpense
+    omega
+
+-- The main conservation theorem
+theorem global_conservation (expenses : Array Expense) (numExpenses memberCount : Nat)
+    (hvalid : ∀ i : Nat, i < numExpenses →
+      0 ≤ expenses[i]!.paidBy ∧ expenses[i]!.paidBy < ↑memberCount ∧
+      Pure.sumTo expenses[i]!.shares memberCount = expenses[i]!.amount) :
+    sumBalances expenses numExpenses memberCount = 0 := by
+  induction numExpenses with
+  | zero => exact sumBalances_zero_expenses _ _
+  | succ k ih =>
+    rw [sumBalances_add_expense]
+    have hk := hvalid k (by omega)
+    rw [ih (fun i hi => hvalid i (by omega))]
+    simp [sumMemberDeltas]
+    exact single_expense_conservation _ _ _ _
+      ⟨hk.1, hk.2.1⟩ hk.2.2
