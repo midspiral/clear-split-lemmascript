@@ -11,9 +11,6 @@
 ### Type annotations
 - **No way to annotate array element types** — `paidBy: number[]` always becomes `Array Int`. Need something like `//@ type paidBy nat[]` to get `Array Nat`.
 
-### Nat/Int for interface fields
-- **`Model.memberCount` is `Int` but should be `Nat`** — `number` always maps to `Int`. No way to annotate interface fields as `Nat`. This prevents calling `sumTo` (which takes `Nat`) with `model.memberCount` in `validExpense`. Workaround: shares-sum check is in the Lean proof as a precondition, not in the TS invariant.
-
 ### Cross-file imports
 - **TS imports don't generate Lean imports** — `import { Foo } from './bar'` is ignored. Workaround: put everything in one file. See DESIGN_IMPORT.md for the planned fix.
 
@@ -27,10 +24,14 @@
 - ~~Method calls in expressions not lifted~~ — selective ANF (§4.6)
 - ~~Pure functions duplicate body in method~~ — wrapper `return Pure.fnName args`
 - ~~`spec-pure` call classification~~ — resolve tags spec-context calls to pure fns
+- ~~Nat/Int for interface fields~~ — `//@ type nat` trailing annotation on interface fields
+- ~~Shares-sum-to-amount in TS invariant~~ — `validExpense` now checks `sumTo(shares, mc) === amount`
+- ~~`validExpense` checks `shares.length === memberCount`~~ — included in strengthened invariant
+- ~~Unified type mapping~~ — `parseTsType` replaces separate `tsTypeToLean` and `resolveTsType` paths
 
 ## Done
-- Invariant on Model (`inv` predicate with `validExpense`, `validSettlement`)
-- `step` preserves `inv` (proven, no sorry)
+- Invariant on Model (`inv` with `validExpense` checking paidBy range, amount, shares length, shares sum)
+- `step` preserves `inv` (proven, no sorry) — validates all conditions before accepting
 - Single-expense conservation theorem (proven)
 - Global conservation theorem (proven) — sum of all balances across all members is zero
 - `expenseDelta`, `settlementDelta`, `computeBalance` verified (expenses + settlements)
@@ -39,5 +40,3 @@
 ## Not yet done
 - **Delta laws** — precise per-person balance changes from addExpense/addSettlement
 - **Settlement conservation** — extend global conservation to include settlements
-- **Shares-sum-to-amount in TS invariant** — blocked by Nat/Int issue (see above)
-- **`validExpense` should check `shares.length === memberCount`** — same Nat/Int blocker
