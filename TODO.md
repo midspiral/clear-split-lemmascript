@@ -34,9 +34,13 @@
 - `step` preserves `inv` (proven, no sorry) — validates all conditions before accepting
 - Single-expense conservation theorem (proven)
 - Global conservation theorem (proven) — sum of all balances across all members is zero
+- Settlement conservation theorem (proven) — from gets +amount, to gets -amount, net zero
 - `expenseDelta`, `settlementDelta`, `computeBalance` verified (expenses + settlements)
 - React app wired to verified logic (expenses + settlements)
+- Interface field type annotations (`//@ type nat` trailing on field line)
+- `validExpense` checks shares.length = memberCount and sumTo(shares) = amount
+- `Model.memberCount` is `Nat` (via interface field annotation)
 
 ## Not yet done
 - **Delta laws** — precise per-person balance changes from addExpense/addSettlement
-- **Settlement conservation** — extend global conservation to include settlements
+- **Full conservation** — combine expense and settlement conservation into one theorem over the whole model
