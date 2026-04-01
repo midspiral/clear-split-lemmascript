@@ -24,19 +24,19 @@ method settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : 
   do
     return Pure.settlementDelta «from» «to» amount member
 
-method validExpense (e : Expense) (memberCount : Int) return (res : Bool)
+method validExpense (e : Expense) (memberCount : Nat) return (res : Bool)
   do
     return Pure.validExpense e memberCount
 
-method allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Int) return (res : Bool)
+method allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Nat) return (res : Bool)
   do
     return Pure.allExpensesValid expenses n memberCount
 
-method validSettlement (s : Settlement) (memberCount : Int) return (res : Bool)
+method validSettlement (s : Settlement) (memberCount : Nat) return (res : Bool)
   do
     return Pure.validSettlement s memberCount
 
-method allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Int) return (res : Bool)
+method allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Nat) return (res : Bool)
   do
     return Pure.allSettlementsValid settlements n memberCount
 

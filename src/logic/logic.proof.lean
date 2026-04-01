@@ -25,7 +25,7 @@ private theorem push_getElem!_last {α : Type} [Inhabited α] (arr : Array α) (
   simp only [h1, getElem!_pos, Array.getElem_push, show ¬(arr.size < arr.size) from by omega, ↓reduceDIte]
 
 -- allExpensesValid over a prefix doesn't change when we push beyond
-theorem allExpensesValid_prefix (arr : Array Expense) (e : Expense) (n : Nat) (mc : Int)
+theorem allExpensesValid_prefix (arr : Array Expense) (e : Expense) (n : Nat) (mc : Nat)
     (hn : n ≤ arr.size) :
     Pure.allExpensesValid (arr.push e) n mc = Pure.allExpensesValid arr n mc := by
   induction n with
@@ -36,7 +36,7 @@ theorem allExpensesValid_prefix (arr : Array Expense) (e : Expense) (n : Nat) (m
     simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
     rw [push_getElem!_lt _ _ _ (by omega), ih hk]
 
-theorem allExpensesValid_push (expenses : Array Expense) (e : Expense) (mc : Int)
+theorem allExpensesValid_push (expenses : Array Expense) (e : Expense) (mc : Nat)
     (hprev : Pure.allExpensesValid expenses expenses.size mc = true)
     (hvalid : Pure.validExpense e mc = true) :
     Pure.allExpensesValid (expenses.push e) (expenses.push e).size mc = true := by
@@ -46,7 +46,7 @@ theorem allExpensesValid_push (expenses : Array Expense) (e : Expense) (mc : Int
   rw [push_getElem!_last, allExpensesValid_prefix _ _ _ _ (le_refl _)]
   simp [hvalid, hprev]
 
-theorem allSettlementsValid_prefix (arr : Array Settlement) (s : Settlement) (n : Nat) (mc : Int)
+theorem allSettlementsValid_prefix (arr : Array Settlement) (s : Settlement) (n : Nat) (mc : Nat)
     (hn : n ≤ arr.size) :
     Pure.allSettlementsValid (arr.push s) n mc = Pure.allSettlementsValid arr n mc := by
   induction n with
@@ -57,7 +57,7 @@ theorem allSettlementsValid_prefix (arr : Array Settlement) (s : Settlement) (n 
     simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
     rw [push_getElem!_lt _ _ _ (by omega), ih hk]
 
-theorem allSettlementsValid_push (settlements : Array Settlement) (s : Settlement) (mc : Int)
+theorem allSettlementsValid_push (settlements : Array Settlement) (s : Settlement) (mc : Nat)
     (hprev : Pure.allSettlementsValid settlements settlements.size mc = true)
     (hvalid : Pure.validSettlement s mc = true) :
     Pure.allSettlementsValid (settlements.push s) (settlements.push s).size mc = true := by
@@ -85,9 +85,9 @@ prove_correct step by
   cases action with
   | addExpense e =>
     simp only [Pure.inv, Pure.validExpense] at *
-    split <;> (try split) <;> (try split) <;> simp_all <;>
+    split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
     rw [show model.expenses.size + 1 = (model.expenses.push e).size from by simp [Array.size_push]]
-    exact allExpensesValid_push model.expenses e _ (by tauto) (by simp [Pure.validExpense]; omega)
+    exact allExpensesValid_push model.expenses e _ (by tauto) (by simp [Pure.validExpense]; tauto)
   | addSettlement s =>
     simp only [Pure.inv, Pure.validSettlement] at *
     split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>

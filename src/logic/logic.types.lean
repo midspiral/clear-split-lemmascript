@@ -22,7 +22,7 @@ inductive Action where
 deriving Repr, Inhabited
 
 structure Model where
-  memberCount : Int
+  memberCount : Nat
   expenses : Array Expense
   settlements : Array Settlement
 deriving Repr, Inhabited, DecidableEq
@@ -50,19 +50,19 @@ def settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : Int
     else
       0
 
-def validExpense (e : Expense) (memberCount : Int) : Bool :=
-  e.paidBy ≥ 0 ∧ e.paidBy < memberCount ∧ e.amount ≥ 0
+def validExpense (e : Expense) (memberCount : Nat) : Bool :=
+  e.paidBy ≥ 0 ∧ e.paidBy < memberCount ∧ e.amount ≥ 0 ∧ (e.shares).size = memberCount ∧ sumTo e.shares memberCount = e.amount
 
-def allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Int) : Bool :=
+def allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Nat) : Bool :=
   if n = 0 then
     true
   else
     validExpense expenses[n - 1]! memberCount ∧ allExpensesValid expenses (n - 1) memberCount
 
-def validSettlement (s : Settlement) (memberCount : Int) : Bool :=
+def validSettlement (s : Settlement) (memberCount : Nat) : Bool :=
   s.«from» ≥ 0 ∧ s.«to» ≥ 0 ∧ s.«from» < memberCount ∧ s.«to» < memberCount ∧ s.«from» ≠ s.«to» ∧ s.amount ≥ 0
 
-def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Int) : Bool :=
+def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Nat) : Bool :=
   if n = 0 then
     true
   else
@@ -84,7 +84,13 @@ def step (model : Model) (action : Action) : Model :=
         if e.amount < 0 then
           model
         else
-          { memberCount := model.memberCount, expenses := Array.push model.expenses e, settlements := model.settlements }
+          if (e.shares).size ≠ model.memberCount then
+            model
+          else
+            if sumTo e.shares model.memberCount ≠ e.amount then
+              model
+            else
+              { memberCount := model.memberCount, expenses := Array.push model.expenses e, settlements := model.settlements }
   | .addSettlement _settlement =>
     let s := _settlement
     if s.«from» < 0 then

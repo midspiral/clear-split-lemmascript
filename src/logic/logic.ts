@@ -24,7 +24,7 @@ export type Action =
   | { tag: 'addSettlement'; settlement: Settlement };
 
 export interface Model {
-  memberCount: number;
+  memberCount: number; //@ type nat
   expenses: Expense[];
   settlements: Settlement[];
 }
@@ -60,24 +60,29 @@ function settlementDelta(from: number, to: number, amount: number, member: numbe
 
 //@ pure
 function validExpense(e: Expense, memberCount: number): boolean {
-  return e.paidBy >= 0 && e.paidBy < memberCount && e.amount >= 0;
+  //@ type memberCount nat
+  return e.paidBy >= 0 && e.paidBy < memberCount && e.amount >= 0
+    && e.shares.length === memberCount && sumTo(e.shares, memberCount) === e.amount;
 }
 
 //@ pure
 function allExpensesValid(expenses: Expense[], n: number, memberCount: number): boolean {
   //@ type n nat
+  //@ type memberCount nat
   if (n === 0) return true;
   return validExpense(expenses[n - 1], memberCount) && allExpensesValid(expenses, n - 1, memberCount);
 }
 
 //@ pure
 function validSettlement(s: Settlement, memberCount: number): boolean {
+  //@ type memberCount nat
   return s.from >= 0 && s.to >= 0 && s.from < memberCount && s.to < memberCount && s.from !== s.to && s.amount >= 0;
 }
 
 //@ pure
 function allSettlementsValid(settlements: Settlement[], n: number, memberCount: number): boolean {
   //@ type n nat
+  //@ type memberCount nat
   if (n === 0) return true;
   return validSettlement(settlements[n - 1], memberCount) && allSettlementsValid(settlements, n - 1, memberCount);
 }
@@ -144,6 +149,8 @@ export function step(model: Model, action: Action): Model {
     if (e.paidBy < 0) return model;
     if (e.paidBy >= model.memberCount) return model;
     if (e.amount < 0) return model;
+    if (e.shares.length !== model.memberCount) return model;
+    if (sumTo(e.shares, model.memberCount) !== e.amount) return model;
     return { memberCount: model.memberCount, expenses: [...model.expenses, e], settlements: model.settlements };
   }
   if (action.tag === 'addSettlement') {
