@@ -91,3 +91,50 @@ prove_correct step by
     rw [show model.settlements.size + 1 = (model.settlements.push s).size from by simp [Array.size_push]]
     exact allSettlementsValid_push model.settlements s _ (by tauto) (by simp [Pure.validSettlement]; omega)
 end StepProof
+
+-- ═════════════════════════════════════════════════════════════���
+-- Conservation theorems
+-- ══════════════════════════════════════════════════════════════
+
+/-- Sum of expenseDelta across members [0, n) for a single expense -/
+def sumDeltas (paidBy : Int) (amount : Int) (shares : Array Int) (n : Nat) : Int :=
+  if n = 0 then 0
+  else sumDeltas paidBy amount shares (n - 1) + Pure.expenseDelta paidBy amount shares[n - 1]! (n - 1)
+
+-- When paidBy is NOT in [0, n), sum = -sumTo
+theorem sumDeltas_no_payer (paidBy : Int) (amount : Int) (shares : Array Int) (n : Nat)
+    (h : ¬(0 ≤ paidBy ∧ paidBy < ↑n)) :
+    sumDeltas paidBy amount shares n = -Pure.sumTo shares n := by
+  induction n with
+  | zero => unfold sumDeltas Pure.sumTo; omega
+  | succ k ih =>
+    unfold sumDeltas Pure.sumTo Pure.expenseDelta
+    have hk : ¬(k + 1 = 0) := by omega
+    have hk' : ¬(paidBy = ↑(k + 1) - 1) := by omega
+    have hprev : ¬(0 ≤ paidBy ∧ paidBy < ↑k) := by omega
+    simp [hk, hk']; rw [ih hprev]; omega
+
+-- When paidBy IS in [0, n), sum = amount - sumTo
+theorem sumDeltas_with_payer (paidBy : Int) (amount : Int) (shares : Array Int) (n : Nat)
+    (h : 0 ≤ paidBy ∧ paidBy < ↑n) :
+    sumDeltas paidBy amount shares n = amount - Pure.sumTo shares n := by
+  induction n with
+  | zero => omega
+  | succ k ih =>
+    unfold sumDeltas Pure.sumTo Pure.expenseDelta
+    have hk : ¬(k + 1 = 0) := by omega
+    by_cases hk' : paidBy = ↑(k + 1) - 1
+    · simp [hk, hk']
+      have hnotk : ¬(0 ≤ (↑k : Int) ∧ (↑k : Int) < ↑k) := by omega
+      rw [sumDeltas_no_payer _ _ _ _ hnotk]; omega
+    · simp [hk, hk']
+      have : 0 ≤ paidBy ∧ paidBy < ↑k := by omega
+      rw [ih this]; omega
+
+/-- Single-expense conservation: if shares sum to amount, deltas across all members sum to zero -/
+theorem single_expense_conservation
+    (paidBy : Int) (amount : Int) (shares : Array Int) (n : Nat)
+    (hpayer : 0 ≤ paidBy ∧ paidBy < ↑n)
+    (hshares : Pure.sumTo shares n = amount) :
+    sumDeltas paidBy amount shares n = 0 := by
+  rw [sumDeltas_with_payer _ _ _ _ hpayer, hshares]; omega
