@@ -346,3 +346,111 @@ theorem settlement_delta_to (from_ to_ amount member : Int) (hto : to_ = member)
 theorem settlement_delta_other (from_ to_ amount member : Int) (hf : from_ ≠ member) (ht : to_ ≠ member) :
     Pure.settlementDelta from_ to_ amount member = 0 := by
   unfold Pure.settlementDelta; simp [hf, ht]
+
+-- ══════════════════════════════════════════════════════════════
+-- Full conservation (expenses + settlements)
+-- ══════════════════════════════════════════════════════════════
+
+/-- Balance for member m from one settlement -/
+def balanceFromSettlement (s : Settlement) (m : Nat) : Int :=
+  Pure.settlementDelta s.«from» s.«to» s.amount m
+
+/-- Balance for member m from all settlements [0, k) -/
+def balanceFromSettlements (settlements : Array Settlement) (k : Nat) (m : Nat) : Int :=
+  if k = 0 then 0
+  else balanceFromSettlements settlements (k - 1) m + balanceFromSettlement settlements[k - 1]! m
+
+/-- Full balance = expenses + settlements -/
+def fullBalance (expenses : Array Expense) (numExp : Nat)
+    (settlements : Array Settlement) (numSett : Nat) (m : Nat) : Int :=
+  balanceFromExpenses expenses numExp m + balanceFromSettlements settlements numSett m
+
+/-- Sum of full balances across members [0, n) -/
+def sumFullBalances (expenses : Array Expense) (numExp : Nat)
+    (settlements : Array Settlement) (numSett : Nat) (n : Nat) : Int :=
+  if n = 0 then 0
+  else sumFullBalances expenses numExp settlements numSett (n - 1) +
+       fullBalance expenses numExp settlements numSett (n - 1)
+
+-- sumFullBalances = sumBalances (expenses) + sumSettlementBalances
+def sumSettlementBalances (settlements : Array Settlement) (numSett : Nat) (n : Nat) : Int :=
+  if n = 0 then 0
+  else sumSettlementBalances settlements numSett (n - 1) + balanceFromSettlements settlements numSett (n - 1)
+
+theorem sumFullBalances_split (expenses : Array Expense) (numExp : Nat)
+    (settlements : Array Settlement) (numSett : Nat) (n : Nat) :
+    sumFullBalances expenses numExp settlements numSett n =
+    sumBalances expenses numExp n + sumSettlementBalances settlements numSett n := by
+  induction n with
+  | zero => simp [sumFullBalances, sumBalances, sumSettlementBalances]
+  | succ k ih =>
+    unfold sumFullBalances sumBalances sumSettlementBalances
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    rw [ih]; unfold fullBalance; omega
+
+-- Settlement balance sum across all members is zero (analogous to expense conservation)
+def sumSettlementMemberDeltas (s : Settlement) (n : Nat) : Int :=
+  sumSettlementDeltas s.«from» s.«to» s.amount n
+
+theorem sumSettlementBalances_zero (settlements : Array Settlement) (n : Nat) :
+    sumSettlementBalances settlements 0 n = 0 := by
+  induction n with
+  | zero => simp [sumSettlementBalances]
+  | succ k ih => simp [sumSettlementBalances, balanceFromSettlements, ih]
+
+theorem balanceFromSettlements_split (settlements : Array Settlement) (k : Nat) (m : Nat) :
+    balanceFromSettlements settlements (k + 1) m =
+    balanceFromSettlements settlements k m + balanceFromSettlement settlements[k]! m := by
+  conv_lhs => unfold balanceFromSettlements
+  simp [show ¬(k + 1 = 0) from by omega, show k + 1 - 1 = k from by omega]
+
+theorem sumSettlementBalances_add (settlements : Array Settlement) (k n : Nat) :
+    sumSettlementBalances settlements (k + 1) n =
+    sumSettlementBalances settlements k n + sumSettlementMemberDeltas settlements[k]! n := by
+  induction n with
+  | zero => simp [sumSettlementBalances, sumSettlementMemberDeltas, sumSettlementDeltas]
+  | succ m ih =>
+    conv_lhs => unfold sumSettlementBalances
+    simp only [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega, ↓reduceIte]
+    rw [balanceFromSettlements_split, ih]
+    have hbal : sumSettlementBalances settlements k (m + 1) =
+      sumSettlementBalances settlements k m + balanceFromSettlements settlements k m := by
+        conv_lhs => unfold sumSettlementBalances
+        simp [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega]
+    rw [hbal]
+    unfold sumSettlementMemberDeltas
+    have hsplit : sumSettlementDeltas settlements[k]!.«from» settlements[k]!.«to» settlements[k]!.amount (m + 1) =
+      sumSettlementDeltas settlements[k]!.«from» settlements[k]!.«to» settlements[k]!.amount m +
+      Pure.settlementDelta settlements[k]!.«from» settlements[k]!.«to» settlements[k]!.amount ↑m := by
+        conv_lhs => unfold sumSettlementDeltas
+        simp [show ¬(m + 1 = 0) from by omega, show m + 1 - 1 = m from by omega, show (↑(m + 1) : Int) - 1 = ↑m from by omega]
+    rw [hsplit]; unfold balanceFromSettlement; omega
+
+theorem global_settlement_conservation (settlements : Array Settlement) (numSett memberCount : Nat)
+    (hvalid : ∀ i : Nat, i < numSett →
+      0 ≤ settlements[i]!.«from» ∧ settlements[i]!.«from» < ↑memberCount ∧
+      0 ≤ settlements[i]!.«to» ∧ settlements[i]!.«to» < ↑memberCount ∧
+      settlements[i]!.«from» ≠ settlements[i]!.«to») :
+    sumSettlementBalances settlements numSett memberCount = 0 := by
+  induction numSett with
+  | zero => exact sumSettlementBalances_zero _ _
+  | succ k ih =>
+    rw [sumSettlementBalances_add]
+    have hk := hvalid k (by omega)
+    rw [ih (fun i hi => hvalid i (by omega))]
+    simp [sumSettlementMemberDeltas]
+    exact settlement_conservation _ _ _ _ ⟨hk.1, hk.2.1⟩ ⟨hk.2.2.1, hk.2.2.2.1⟩ hk.2.2.2.2
+
+/-- THE FULL CONSERVATION THEOREM:
+    For a valid model, the sum of all balances across all members is zero. -/
+theorem full_conservation (expenses : Array Expense) (numExp : Nat)
+    (settlements : Array Settlement) (numSett : Nat) (memberCount : Nat)
+    (hexp : ∀ i : Nat, i < numExp →
+      0 ≤ expenses[i]!.paidBy ∧ expenses[i]!.paidBy < ↑memberCount ∧
+      Pure.sumTo expenses[i]!.shares memberCount = expenses[i]!.amount)
+    (hsett : ∀ i : Nat, i < numSett →
+      0 ≤ settlements[i]!.«from» ∧ settlements[i]!.«from» < ↑memberCount ∧
+      0 ≤ settlements[i]!.«to» ∧ settlements[i]!.«to» < ↑memberCount ∧
+      settlements[i]!.«from» ≠ settlements[i]!.«to») :
+    sumFullBalances expenses numExp settlements numSett memberCount = 0 := by
+  rw [sumFullBalances_split, global_conservation _ _ _ hexp, global_settlement_conservation _ _ _ hsett]; omega
