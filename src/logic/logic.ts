@@ -29,6 +29,33 @@ export interface Model {
   settlements: Settlement[];
 }
 
+// ── Pure spec helpers ───────────────────────────────────────
+
+//@ pure
+function sumTo(arr: number[], n: number): number {
+  //@ type n nat
+  if (n === 0) return 0;
+  return sumTo(arr, n - 1) + arr[n - 1];
+}
+
+//@ pure
+function expenseDelta(paidBy: number, amount: number, share: number, member: number): number {
+  //@ ensures paidBy === member ==> \result === amount - share
+  //@ ensures paidBy !== member ==> \result === 0 - share
+  if (paidBy === member) return amount - share;
+  return 0 - share;
+}
+
+//@ pure
+function settlementDelta(from: number, to: number, amount: number, member: number): number {
+  //@ ensures from === member ==> \result === amount
+  //@ ensures to === member && from !== member ==> \result === 0 - amount
+  //@ ensures from !== member && to !== member ==> \result === 0
+  if (from === member) return amount;
+  if (to === member) return 0 - amount;
+  return 0;
+}
+
 // ── Invariant predicates ────────────────────────────────────
 
 //@ pure
@@ -60,33 +87,6 @@ function inv(model: Model): boolean {
   return model.memberCount >= 0
     && allExpensesValid(model.expenses, model.expenses.length, model.memberCount)
     && allSettlementsValid(model.settlements, model.settlements.length, model.memberCount);
-}
-
-// ── Pure spec helpers ───────────────────────────────────────
-
-//@ pure
-function sumTo(arr: number[], n: number): number {
-  //@ type n nat
-  if (n === 0) return 0;
-  return sumTo(arr, n - 1) + arr[n - 1];
-}
-
-//@ pure
-function expenseDelta(paidBy: number, amount: number, share: number, member: number): number {
-  //@ ensures paidBy === member ==> \result === amount - share
-  //@ ensures paidBy !== member ==> \result === 0 - share
-  if (paidBy === member) return amount - share;
-  return 0 - share;
-}
-
-//@ pure
-function settlementDelta(from: number, to: number, amount: number, member: number): number {
-  //@ ensures from === member ==> \result === amount
-  //@ ensures to === member && from !== member ==> \result === 0 - amount
-  //@ ensures from !== member && to !== member ==> \result === 0
-  if (from === member) return amount;
-  if (to === member) return 0 - amount;
-  return 0;
 }
 
 // ── Verified operations ─────────────────────────────────────

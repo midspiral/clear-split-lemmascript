@@ -7,6 +7,23 @@ import «logic.types»
 set_option loom.semantics.termination "total"
 set_option loom.semantics.choice "demonic"
 
+method sumTo (arr : Array Int) (n : Nat) return (res : Int)
+  do
+    return Pure.sumTo arr n
+
+method expenseDelta (paidBy : Int) (amount : Int) (share : Int) (member : Int) return (res : Int)
+  ensures paidBy = member → res = amount - share
+  ensures paidBy ≠ member → res = 0 - share
+  do
+    return Pure.expenseDelta paidBy amount share member
+
+method settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : Int) return (res : Int)
+  ensures «from» = member → res = amount
+  ensures «to» = member → «from» ≠ member → res = 0 - amount
+  ensures «from» ≠ member → «to» ≠ member → res = 0
+  do
+    return Pure.settlementDelta «from» «to» amount member
+
 method validExpense (e : Expense) (memberCount : Int) return (res : Bool)
   do
     return Pure.validExpense e memberCount
@@ -26,23 +43,6 @@ method allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCou
 method inv (model : Model) return (res : Bool)
   do
     return Pure.inv model
-
-method sumTo (arr : Array Int) (n : Nat) return (res : Int)
-  do
-    return Pure.sumTo arr n
-
-method expenseDelta (paidBy : Int) (amount : Int) (share : Int) (member : Int) return (res : Int)
-  ensures paidBy = member → res = amount - share
-  ensures paidBy ≠ member → res = 0 - share
-  do
-    return Pure.expenseDelta paidBy amount share member
-
-method settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : Int) return (res : Int)
-  ensures «from» = member → res = amount
-  ensures «to» = member → «from» ≠ member → res = 0 - amount
-  ensures «from» ≠ member → «to» ≠ member → res = 0
-  do
-    return Pure.settlementDelta «from» «to» amount member
 
 method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (member : Nat) (expenseCount : Nat) return (res : Int)
   do

@@ -29,27 +29,6 @@ deriving Repr, Inhabited, DecidableEq
 
 namespace Pure
 
-def validExpense (e : Expense) (memberCount : Int) : Bool :=
-  e.paidBy ≥ 0 ∧ e.paidBy < memberCount ∧ e.amount ≥ 0
-
-def allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Int) : Bool :=
-  if n = 0 then
-    true
-  else
-    validExpense expenses[n - 1]! memberCount ∧ allExpensesValid expenses (n - 1) memberCount
-
-def validSettlement (s : Settlement) (memberCount : Int) : Bool :=
-  s.«from» ≥ 0 ∧ s.«to» ≥ 0 ∧ s.«from» < memberCount ∧ s.«to» < memberCount ∧ s.«from» ≠ s.«to» ∧ s.amount ≥ 0
-
-def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Int) : Bool :=
-  if n = 0 then
-    true
-  else
-    validSettlement settlements[n - 1]! memberCount ∧ allSettlementsValid settlements (n - 1) memberCount
-
-def inv (model : Model) : Bool :=
-  model.memberCount ≥ 0 ∧ allExpensesValid model.expenses (model.expenses).size model.memberCount ∧ allSettlementsValid model.settlements (model.settlements).size model.memberCount
-
 def sumTo (arr : Array Int) (n : Nat) : Int :=
   if n = 0 then
     0
@@ -70,6 +49,27 @@ def settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : Int
       0 - amount
     else
       0
+
+def validExpense (e : Expense) (memberCount : Int) : Bool :=
+  e.paidBy ≥ 0 ∧ e.paidBy < memberCount ∧ e.amount ≥ 0
+
+def allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Int) : Bool :=
+  if n = 0 then
+    true
+  else
+    validExpense expenses[n - 1]! memberCount ∧ allExpensesValid expenses (n - 1) memberCount
+
+def validSettlement (s : Settlement) (memberCount : Int) : Bool :=
+  s.«from» ≥ 0 ∧ s.«to» ≥ 0 ∧ s.«from» < memberCount ∧ s.«to» < memberCount ∧ s.«from» ≠ s.«to» ∧ s.amount ≥ 0
+
+def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Int) : Bool :=
+  if n = 0 then
+    true
+  else
+    validSettlement settlements[n - 1]! memberCount ∧ allSettlementsValid settlements (n - 1) memberCount
+
+def inv (model : Model) : Bool :=
+  model.memberCount ≥ 0 ∧ allExpensesValid model.expenses (model.expenses).size model.memberCount ∧ allSettlementsValid model.settlements (model.settlements).size model.memberCount
 
 def step (model : Model) (action : Action) : Model :=
   match action with

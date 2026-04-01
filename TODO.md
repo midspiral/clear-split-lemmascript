@@ -11,6 +11,9 @@
 ### Type annotations
 - **No way to annotate array element types** — `paidBy: number[]` always becomes `Array Int`. Need something like `//@ type paidBy nat[]` to get `Array Nat`.
 
+### Nat/Int for interface fields
+- **`Model.memberCount` is `Int` but should be `Nat`** — `number` always maps to `Int`. No way to annotate interface fields as `Nat`. This prevents calling `sumTo` (which takes `Nat`) with `model.memberCount` in `validExpense`. Workaround: shares-sum check is in the Lean proof as a precondition, not in the TS invariant.
+
 ### Cross-file imports
 - **TS imports don't generate Lean imports** — `import { Foo } from './bar'` is ignored. Workaround: put everything in one file. See DESIGN_IMPORT.md for the planned fix.
 
