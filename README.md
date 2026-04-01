@@ -2,7 +2,7 @@
 
 A group expense splitting app with formally verified balance logic, built with [LemmaScript](https://github.com/midspiral/LemmaScript) and React.
 
-This is a greenfield reimplementation of the [Dafny ClearSplit](https://github.com/metareflection/dafny-replay/clear-split/) using LemmaScript — the TypeScript is both the implementation and the verified source. No compilation bridge, no BigNumber.js.
+This is a greenfield reimplementation of the [Dafny ClearSplit](https://github.com/metareflection/dafny-replay/tree/main/clear-split) using LemmaScript — the TypeScript is both the implementation and the verified source. No compilation bridge, no BigNumber.js.
 
 ## Setup
 
