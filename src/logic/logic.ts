@@ -121,16 +121,16 @@ export function computeBalance(
   while (i < expenseCount) {
     //@ decreases expenseCount - i
     //@ invariant i <= expenseCount
-    balance = balance + expenseDelta(paidBy[i], amounts[i], shares[i], member);
-    i = i + 1;
+    balance += expenseDelta(paidBy[i], amounts[i], shares[i], member);
+    i++;
   }
 
   let j = 0;
   while (j < settlementCount) {
     //@ decreases settlementCount - j
     //@ invariant j <= settlementCount
-    balance = balance + settlementDelta(settFrom[j], settTo[j], settAmounts[j], member);
-    j = j + 1;
+    balance += settlementDelta(settFrom[j], settTo[j], settAmounts[j], member);
+    j++;
   }
 
   return balance;
