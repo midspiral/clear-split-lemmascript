@@ -32,12 +32,12 @@
 - Invariant on Model (`inv` predicate with `validExpense`, `validSettlement`)
 - `step` preserves `inv` (proven, no sorry)
 - Single-expense conservation theorem (proven)
-- `expenseDelta`, `computeBalance` verified
-- React app wired to verified logic
+- Global conservation theorem (proven) — sum of all balances across all members is zero
+- `expenseDelta`, `settlementDelta`, `computeBalance` verified (expenses + settlements)
+- React app wired to verified logic (expenses + settlements)
 
 ## Not yet done
-- **Global conservation** — sum of all balances across all members is zero for the full model
 - **Delta laws** — precise per-person balance changes from addExpense/addSettlement
-- **Settlements in computeBalance** — currently only expenses, no settlement deltas
+- **Settlement conservation** — extend global conservation to include settlements
 - **Shares-sum-to-amount in TS invariant** — blocked by Nat/Int issue (see above)
 - **`validExpense` should check `shares.length === memberCount`** — same Nat/Int blocker
