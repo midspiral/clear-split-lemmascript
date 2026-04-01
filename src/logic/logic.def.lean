@@ -7,6 +7,26 @@ import «logic.types»
 set_option loom.semantics.termination "total"
 set_option loom.semantics.choice "demonic"
 
+method validExpense (e : Expense) (memberCount : Int) return (res : Bool)
+  do
+    return Pure.validExpense e memberCount
+
+method allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Int) return (res : Bool)
+  do
+    return Pure.allExpensesValid expenses n memberCount
+
+method validSettlement (s : Settlement) (memberCount : Int) return (res : Bool)
+  do
+    return Pure.validSettlement s memberCount
+
+method allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Int) return (res : Bool)
+  do
+    return Pure.allSettlementsValid settlements n memberCount
+
+method inv (model : Model) return (res : Bool)
+  do
+    return Pure.inv model
+
 method sumTo (arr : Array Int) (n : Nat) return (res : Int)
   do
     return Pure.sumTo arr n
@@ -38,5 +58,7 @@ method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array
     return balance
 
 method step (model : Model) (action : Action) return (res : Model)
+  require Pure.inv model
+  ensures Pure.inv res
   do
     return Pure.step model action

@@ -29,6 +29,39 @@ export interface Model {
   settlements: Settlement[];
 }
 
+// ── Invariant predicates ────────────────────────────────────
+
+//@ pure
+function validExpense(e: Expense, memberCount: number): boolean {
+  return e.paidBy >= 0 && e.paidBy < memberCount && e.amount >= 0;
+}
+
+//@ pure
+function allExpensesValid(expenses: Expense[], n: number, memberCount: number): boolean {
+  //@ type n nat
+  if (n === 0) return true;
+  return validExpense(expenses[n - 1], memberCount) && allExpensesValid(expenses, n - 1, memberCount);
+}
+
+//@ pure
+function validSettlement(s: Settlement, memberCount: number): boolean {
+  return s.from >= 0 && s.to >= 0 && s.from < memberCount && s.to < memberCount && s.from !== s.to && s.amount >= 0;
+}
+
+//@ pure
+function allSettlementsValid(settlements: Settlement[], n: number, memberCount: number): boolean {
+  //@ type n nat
+  if (n === 0) return true;
+  return validSettlement(settlements[n - 1], memberCount) && allSettlementsValid(settlements, n - 1, memberCount);
+}
+
+//@ pure
+function inv(model: Model): boolean {
+  return model.memberCount >= 0
+    && allExpensesValid(model.expenses, model.expenses.length, model.memberCount)
+    && allSettlementsValid(model.settlements, model.settlements.length, model.memberCount);
+}
+
 // ── Pure spec helpers ───────────────────────────────────────
 
 //@ pure
@@ -90,6 +123,8 @@ export function computeBalance(
  * Returns the new model, or the original if the action is invalid.
  */
 export function step(model: Model, action: Action): Model {
+  //@ requires inv(model)
+  //@ ensures inv(\result)
   if (action.tag === 'addExpense') {
     const e = action.expense;
     if (e.paidBy < 0) return model;
