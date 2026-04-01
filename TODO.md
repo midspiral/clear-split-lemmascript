@@ -37,10 +37,10 @@
 - Settlement conservation theorem (proven) — from gets +amount, to gets -amount, net zero
 - `expenseDelta`, `settlementDelta`, `computeBalance` verified (expenses + settlements)
 - React app wired to verified logic (expenses + settlements)
+- Delta laws: `add_expense_delta`, `settlement_delta_from/to/other`
 - Interface field type annotations (`//@ type nat` trailing on field line)
 - `validExpense` checks shares.length = memberCount and sumTo(shares) = amount
 - `Model.memberCount` is `Nat` (via interface field annotation)
 
 ## Not yet done
-- **Delta laws** — precise per-person balance changes from addExpense/addSettlement
 - **Full conservation** — combine expense and settlement conservation into one theorem over the whole model
