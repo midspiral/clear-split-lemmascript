@@ -42,5 +42,17 @@
 - `validExpense` checks shares.length = memberCount and sumTo(shares) = amount
 - `Model.memberCount` is `Nat` (via interface field annotation)
 
-## Not yet done
-- **Full conservation** — combine expense and settlement conservation into one theorem over the whole model
+## All proofs complete
+
+No sorry. No remaining proof obligations.
+
+Full theorem set:
+- `full_conservation` — sum of all balances (expenses + settlements) across all members is zero
+- `global_conservation` — expense-only conservation
+- `global_settlement_conservation` — settlement-only conservation
+- `single_expense_conservation` — one expense, member deltas sum to zero
+- `settlement_conservation` — one settlement, member deltas sum to zero
+- `add_expense_delta` — adding an expense changes balance by exactly expenseDelta
+- `settlement_delta_from/to/other` — precise settlement delta per member
+- `step` preserves `inv` — invariant maintained through operations
+- `expenseDelta`, `settlementDelta`, `computeBalance` — per-function verification
