@@ -28,7 +28,16 @@
 - ~~Pure functions duplicate body in method~~ — wrapper `return Pure.fnName args`
 - ~~`spec-pure` call classification~~ — resolve tags spec-context calls to pure fns
 
-## Not yet attempted
-- Settlements in computeBalance (add back once conservation proven for expenses)
-- Invariant on Model (validExpense, validSettlement predicates)
-- Cross-function conservation theorem using step
+## Done
+- Invariant on Model (`inv` predicate with `validExpense`, `validSettlement`)
+- `step` preserves `inv` (proven, no sorry)
+- Single-expense conservation theorem (proven)
+- `expenseDelta`, `computeBalance` verified
+- React app wired to verified logic
+
+## Not yet done
+- **Global conservation** — sum of all balances across all members is zero for the full model
+- **Delta laws** — precise per-person balance changes from addExpense/addSettlement
+- **Settlements in computeBalance** — currently only expenses, no settlement deltas
+- **Shares-sum-to-amount in TS invariant** — blocked by Nat/Int issue (see above)
+- **`validExpense` should check `shares.length === memberCount`** — same Nat/Int blocker
