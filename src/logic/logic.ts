@@ -92,19 +92,25 @@ function inv(model: Model): boolean {
 // ── Verified operations ─────────────────────────────────────
 
 /**
- * Compute balance for one member across all expenses.
+ * Compute balance for one member across all expenses and settlements.
  * Positive = owed by group. Negative = owes to group.
  */
 export function computeBalance(
   paidBy: number[],
   amounts: number[],
   shares: number[],
+  settFrom: number[],
+  settTo: number[],
+  settAmounts: number[],
   member: number,
   expenseCount: number,
+  settlementCount: number,
 ): number {
   //@ type member nat
   //@ type expenseCount nat
+  //@ type settlementCount nat
   //@ type i nat
+  //@ type j nat
   let balance = 0;
 
   let i = 0;
@@ -113,6 +119,14 @@ export function computeBalance(
     //@ invariant i <= expenseCount
     balance = balance + expenseDelta(paidBy[i], amounts[i], shares[i], member);
     i = i + 1;
+  }
+
+  let j = 0;
+  while (j < settlementCount) {
+    //@ decreases settlementCount - j
+    //@ invariant j <= settlementCount
+    balance = balance + settlementDelta(settFrom[j], settTo[j], settAmounts[j], member);
+    j = j + 1;
   }
 
   return balance;

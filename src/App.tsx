@@ -22,7 +22,10 @@ function getBalance(model: Model, memberIdx: number): number {
   const paidBy = model.expenses.map(e => e.paidBy);
   const amounts = model.expenses.map(e => e.amount);
   const shares = model.expenses.map(e => e.shares[memberIdx]);
-  return computeBalance(paidBy, amounts, shares, memberIdx, model.expenses.length);
+  const settFrom = model.settlements.map(s => s.from);
+  const settTo = model.settlements.map(s => s.to);
+  const settAmounts = model.settlements.map(s => s.amount);
+  return computeBalance(paidBy, amounts, shares, settFrom, settTo, settAmounts, memberIdx, model.expenses.length, model.settlements.length);
 }
 
 function App() {

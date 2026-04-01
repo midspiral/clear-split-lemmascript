@@ -44,7 +44,7 @@ method inv (model : Model) return (res : Bool)
   do
     return Pure.inv model
 
-method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (member : Nat) (expenseCount : Nat) return (res : Int)
+method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (settFrom : Array Int) (settTo : Array Int) (settAmounts : Array Int) (member : Nat) (expenseCount : Nat) (settlementCount : Nat) return (res : Int)
   do
     let mut balance : Int := 0
     let mut i : Nat := 0
@@ -55,6 +55,14 @@ method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array
       let _t0 ← expenseDelta paidBy[i]! amounts[i]! shares[i]! member
       balance := balance + _t0
       i := i + 1
+    let mut j : Nat := 0
+    while j < settlementCount
+      invariant j ≤ settlementCount
+      decreasing settlementCount - j
+    do
+      let _t1 ← settlementDelta settFrom[j]! settTo[j]! settAmounts[j]! member
+      balance := balance + _t1
+      j := j + 1
     return balance
 
 method step (model : Model) (action : Action) return (res : Model)
