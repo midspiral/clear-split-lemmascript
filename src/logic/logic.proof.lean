@@ -86,13 +86,13 @@ prove_correct step by
   | addExpense e =>
     simp only [Pure.inv, Pure.validExpense] at *
     split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
-    rw [show model.expenses.size + 1 = (model.expenses.push e).size from by simp [Array.size_push]]
-    exact allExpensesValid_push model.expenses e _ (by tauto) (by simp [Pure.validExpense]; tauto)
+    (rw [show model.expenses.size + 1 = (model.expenses.push e).size from by simp [Array.size_push]];
+     exact allExpensesValid_push model.expenses e model.memberCount (by tauto) (by simp [Pure.validExpense]; tauto))
   | addSettlement s =>
     simp only [Pure.inv, Pure.validSettlement] at *
     split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
-    rw [show model.settlements.size + 1 = (model.settlements.push s).size from by simp [Array.size_push]]
-    exact allSettlementsValid_push model.settlements s _ (by tauto) (by simp [Pure.validSettlement]; omega)
+    (rw [show model.settlements.size + 1 = (model.settlements.push s).size from by simp [Array.size_push]];
+     exact allSettlementsValid_push model.settlements s model.memberCount (by tauto) (by simp [Pure.validSettlement]; omega))
 end StepProof
 
 -- ═════════════════════════════════════════════════════════════���
@@ -227,3 +227,76 @@ theorem global_conservation (expenses : Array Expense) (numExpenses memberCount 
     simp [sumMemberDeltas]
     exact single_expense_conservation _ _ _ _
       ⟨hk.1, hk.2.1⟩ hk.2.2
+
+-- ══════════════════════════════════════════════════════════════
+-- Settlement conservation
+-- ══════════════════════════════════════════════════════════════
+
+/-- Sum of settlementDelta across members [0, n) for one settlement -/
+def sumSettlementDeltas (from_ to_ amount : Int) (n : Nat) : Int :=
+  if n = 0 then 0
+  else sumSettlementDeltas from_ to_ amount (n - 1) + Pure.settlementDelta from_ to_ amount (n - 1)
+
+-- When neither from nor to is in [0, n), sum = 0
+theorem sumSettlementDeltas_none (from_ to_ amount : Int) (n : Nat)
+    (hf : ¬(0 ≤ from_ ∧ from_ < ↑n)) (ht : ¬(0 ≤ to_ ∧ to_ < ↑n)) :
+    sumSettlementDeltas from_ to_ amount n = 0 := by
+  induction n with
+  | zero => simp [sumSettlementDeltas]
+  | succ k ih =>
+    unfold sumSettlementDeltas Pure.settlementDelta
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    have : from_ ≠ ↑k := by omega
+    have : to_ ≠ ↑k := by omega
+    simp [*]; exact ih (by omega) (by omega)
+
+-- When only from is in [0, n), sum = amount
+theorem sumSettlementDeltas_from_only (from_ to_ amount : Int) (n : Nat)
+    (hf : 0 ≤ from_ ∧ from_ < ↑n) (ht : ¬(0 ≤ to_ ∧ to_ < ↑n)) :
+    sumSettlementDeltas from_ to_ amount n = amount := by
+  induction n with
+  | zero => omega
+  | succ k ih =>
+    unfold sumSettlementDeltas Pure.settlementDelta
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    have htk : to_ ≠ ↑k := by omega
+    by_cases hfk : from_ = ↑k
+    · simp [hfk, htk]; exact sumSettlementDeltas_none _ _ _ _ (by omega) (by omega)
+    · simp [hfk, htk]; exact ih (by omega) (by omega)
+
+-- When only to is in [0, n), sum = -amount
+theorem sumSettlementDeltas_to_only (from_ to_ amount : Int) (n : Nat)
+    (hf : ¬(0 ≤ from_ ∧ from_ < ↑n)) (ht : 0 ≤ to_ ∧ to_ < ↑n) :
+    sumSettlementDeltas from_ to_ amount n = -amount := by
+  induction n with
+  | zero => omega
+  | succ k ih =>
+    unfold sumSettlementDeltas Pure.settlementDelta
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    have hfk : from_ ≠ ↑k := by omega
+    by_cases htk : to_ = ↑k
+    · simp [hfk, htk]; rw [sumSettlementDeltas_none _ _ _ _ (by omega) (by omega)]
+    · simp [hfk, htk]; exact ih (by omega) (by omega)
+
+/-- Settlement conservation: from gets +amount, to gets -amount, net zero -/
+theorem settlement_conservation (from_ to_ amount : Int) (n : Nat)
+    (hfrom : 0 ≤ from_ ∧ from_ < ↑n)
+    (hto : 0 ≤ to_ ∧ to_ < ↑n)
+    (hne : from_ ≠ to_) :
+    sumSettlementDeltas from_ to_ amount n = 0 := by
+  induction n with
+  | zero => omega
+  | succ k ih =>
+    unfold sumSettlementDeltas Pure.settlementDelta
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    by_cases hfk : from_ = ↑k
+    · -- from = k
+      simp [hfk, show ↑k ≠ to_ from by omega]
+      rw [sumSettlementDeltas_to_only (↑k) to_ amount k (by omega) (by omega)]; omega
+    · by_cases htk : to_ = ↑k
+      · -- to = k
+        simp [hfk, htk]
+        rw [sumSettlementDeltas_from_only from_ (↑k) amount k (by omega) (by omega)]; omega
+      · -- neither
+        simp [hfk, htk]
+        exact ih (by omega) (by omega)

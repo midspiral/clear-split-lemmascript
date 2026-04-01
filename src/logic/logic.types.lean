@@ -69,7 +69,7 @@ def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount 
     validSettlement settlements[n - 1]! memberCount ∧ allSettlementsValid settlements (n - 1) memberCount
 
 def inv (model : Model) : Bool :=
-  model.memberCount ≥ 0 ∧ allExpensesValid model.expenses (model.expenses).size model.memberCount ∧ allSettlementsValid model.settlements (model.settlements).size model.memberCount
+  allExpensesValid model.expenses (model.expenses).size model.memberCount ∧ allSettlementsValid model.settlements (model.settlements).size model.memberCount
 
 def step (model : Model) (action : Action) : Model :=
   match action with

@@ -89,8 +89,7 @@ function allSettlementsValid(settlements: Settlement[], n: number, memberCount: 
 
 //@ pure
 function inv(model: Model): boolean {
-  return model.memberCount >= 0
-    && allExpensesValid(model.expenses, model.expenses.length, model.memberCount)
+  return allExpensesValid(model.expenses, model.expenses.length, model.memberCount)
     && allSettlementsValid(model.settlements, model.settlements.length, model.memberCount);
 }
 
