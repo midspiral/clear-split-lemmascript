@@ -300,3 +300,49 @@ theorem settlement_conservation (from_ to_ amount : Int) (n : Nat)
       · -- neither
         simp [hfk, htk]
         exact ih (by omega) (by omega)
+
+-- ══════════════════════════════════════════════════════════════
+-- Delta laws
+-- ══════════════════════════════════════════════════════════════
+
+/-- Adding an expense changes each member's balance by exactly expenseDelta -/
+-- Pushing an expense doesn't change balanceFromExpenses for the prefix
+theorem balanceFromExpenses_push_prefix (expenses : Array Expense) (e : Expense) (n : Nat) (m : Nat)
+    (hn : n ≤ expenses.size) :
+    balanceFromExpenses (expenses.push e) n m = balanceFromExpenses expenses n m := by
+  induction n with
+  | zero => simp [balanceFromExpenses]
+  | succ k ih =>
+    conv_lhs => unfold balanceFromExpenses
+    conv_rhs => unfold balanceFromExpenses
+    simp only [show ¬(k + 1 = 0) from by omega, ↓reduceIte, show k + 1 - 1 = k from by omega]
+    rw [push_getElem!_lt _ _ _ (by omega)]
+    congr 1; exact ih (by omega)
+
+/-- Adding an expense changes each member's balance by exactly expenseDelta -/
+theorem add_expense_delta (expenses : Array Expense) (e : Expense) (m : Nat) :
+    balanceFromExpenses (expenses.push e) (expenses.size + 1) m =
+    balanceFromExpenses expenses expenses.size m + balanceFromExpense e m := by
+  conv_lhs => unfold balanceFromExpenses
+  simp only [show ¬(expenses.size + 1 = 0) from by omega, ↓reduceIte,
+             show expenses.size + 1 - 1 = expenses.size from by omega]
+  rw [push_getElem!_last, balanceFromExpenses_push_prefix _ _ _ _ (le_refl _)]
+
+-- Settlement delta laws:
+-- from gets +amount, to gets -amount, others get 0
+-- settlementDelta from to amount member =
+--   if from = member then amount
+--   else if to = member then -amount
+--   else 0
+
+theorem settlement_delta_from (from_ to_ amount member : Int) (h : from_ = member) :
+    Pure.settlementDelta from_ to_ amount member = amount := by
+  unfold Pure.settlementDelta; simp [h]
+
+theorem settlement_delta_to (from_ to_ amount member : Int) (hto : to_ = member) (hne : from_ ≠ member) :
+    Pure.settlementDelta from_ to_ amount member = -amount := by
+  unfold Pure.settlementDelta; simp [hne, hto]
+
+theorem settlement_delta_other (from_ to_ amount member : Int) (hf : from_ ≠ member) (ht : to_ ≠ member) :
+    Pure.settlementDelta from_ to_ amount member = 0 := by
+  unfold Pure.settlementDelta; simp [hf, ht]
