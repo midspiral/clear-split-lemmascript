@@ -12,7 +12,7 @@
 - **No way to annotate array element types** — `paidBy: number[]` always becomes `Array Int`. Need something like `//@ type paidBy nat[]` to get `Array Nat`.
 
 ### Cross-file imports
-- **TS imports don't generate Lean imports** — `import { Foo } from './bar'` is ignored. Workaround: put everything in one file. See DESIGN_IMPORT.md for the planned fix.
+- **TS imports don't generate Lean imports** — `import { Foo } from './bar'` is ignored. Workaround: put everything in one file.
 
 ## Fixed in this session
 
