@@ -25,6 +25,12 @@ function expenseDelta(paidBy: int, amount: int, share: int, member: int): int
     (0 - share)
 }
 
+lemma expenseDelta_ensures(paidBy: int, amount: int, share: int, member: int)
+  ensures ((paidBy == member) ==> (expenseDelta(paidBy, amount, share, member) == (amount - share)))
+  ensures ((paidBy != member) ==> (expenseDelta(paidBy, amount, share, member) == (0 - share)))
+{
+}
+
 function settlementDelta(from: int, to: int, amount: int, member: int): int
 {
   if (from == member) then
@@ -34,6 +40,13 @@ function settlementDelta(from: int, to: int, amount: int, member: int): int
       (0 - amount)
     else
       0
+}
+
+lemma settlementDelta_ensures(from: int, to: int, amount: int, member: int)
+  ensures ((from == member) ==> (settlementDelta(from, to, amount, member) == amount))
+  ensures ((to == member) ==> (from != member) ==> (settlementDelta(from, to, amount, member) == (0 - amount)))
+  ensures ((from != member) ==> (to != member) ==> (settlementDelta(from, to, amount, member) == 0))
+{
 }
 
 function validExpense(e: Expense, memberCount: nat): bool
@@ -113,6 +126,12 @@ function step(model: Model, action: Action): Model
                 else
                   Model(model.memberCount, model.expenses, (model.settlements + [s]))
   }
+}
+
+lemma step_ensures(model: Model, action: Action)
+  requires inv(model)
+  ensures inv(step(model, action))
+{
 }
 
 method computeBalance(paidBy: seq<int>, amounts: seq<int>, shares: seq<int>, settFrom: seq<int>, settTo: seq<int>, settAmounts: seq<int>, member: nat, expenseCount: nat, settlementCount: nat) returns (res: int)
