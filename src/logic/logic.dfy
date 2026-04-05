@@ -25,6 +25,12 @@ function expenseDelta(paidBy: int, amount: int, share: int, member: int): int
     (0 - share)
 }
 
+lemma expenseDelta_ensures(paidBy: int, amount: int, share: int, member: int)
+  ensures ((paidBy == member) ==> (expenseDelta(paidBy, amount, share, member) == (amount - share)))
+  ensures ((paidBy != member) ==> (expenseDelta(paidBy, amount, share, member) == (0 - share)))
+{
+}
+
 function settlementDelta(from: int, to: int, amount: int, member: int): int
 {
   if (from == member) then
@@ -34,6 +40,13 @@ function settlementDelta(from: int, to: int, amount: int, member: int): int
       (0 - amount)
     else
       0
+}
+
+lemma settlementDelta_ensures(from: int, to: int, amount: int, member: int)
+  ensures ((from == member) ==> (settlementDelta(from, to, amount, member) == amount))
+  ensures ((to == member) ==> (from != member) ==> (settlementDelta(from, to, amount, member) == (0 - amount)))
+  ensures ((from != member) ==> (to != member) ==> (settlementDelta(from, to, amount, member) == 0))
+{
 }
 
 function validExpense(e: Expense, memberCount: nat): bool
@@ -112,6 +125,44 @@ function step(model: Model, action: Action): Model
                   model
                 else
                   Model(model.memberCount, model.expenses, (model.settlements + [s]))
+  }
+}
+
+lemma allExpensesValid_append(expenses: seq<Expense>, e: Expense, n: nat, memberCount: nat)
+  requires n <= |expenses|
+  requires allExpensesValid(expenses, n, memberCount)
+  ensures allExpensesValid(expenses + [e], n, memberCount)
+{
+  if n != 0 {
+    allExpensesValid_append(expenses, e, n - 1, memberCount);
+  }
+}
+
+lemma allSettlementsValid_append(settlements: seq<Settlement>, s: Settlement, n: nat, memberCount: nat)
+  requires n <= |settlements|
+  requires allSettlementsValid(settlements, n, memberCount)
+  ensures allSettlementsValid(settlements + [s], n, memberCount)
+{
+  if n != 0 {
+    allSettlementsValid_append(settlements, s, n - 1, memberCount);
+  }
+}
+
+lemma step_ensures(model: Model, action: Action)
+  requires inv(model)
+  ensures inv(step(model, action))
+{
+  match action {
+    case addExpense(e) =>
+      if e.paidBy >= 0 && e.paidBy < model.memberCount && e.amount >= 0
+         && |e.shares| == model.memberCount && sumTo(e.shares, model.memberCount) == e.amount {
+        allExpensesValid_append(model.expenses, e, |model.expenses|, model.memberCount);
+      }
+    case addSettlement(s) =>
+      if s.from >= 0 && s.to >= 0 && s.from < model.memberCount && s.to < model.memberCount
+         && s.from != s.to && s.amount >= 0 {
+        allSettlementsValid_append(model.settlements, s, |model.settlements|, model.memberCount);
+      }
   }
 }
 
