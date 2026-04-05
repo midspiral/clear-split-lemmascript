@@ -68,10 +68,25 @@ src/logic/
   logic.types.lean      <- Generated: structures, Pure namespace with defs
   logic.def.lean        <- Generated: Velvet method definitions
   logic.proof.lean      <- Proofs: per-step + conservation theorem
+  logic.dfy             <- Generated: Dafny specification
+  logic.proofs.dfy      <- Dafny proofs: step preservation + full conservation (56 verified)
 src/
   App.tsx               <- React UI
   App.css               <- Light theme
 ```
+
+### Dafny Proofs
+
+The same spec is also verified in Dafny (56 lemmas, 0 errors), ported from the [Dafny ClearSplit](https://github.com/metareflection/dafny-replay/tree/main/clear-split):
+
+- **Step preservation:** `StepPreservesInv` — `inv(model) ==> inv(step(model, action))`
+- **Single expense conservation:** sum of `expenseDelta` across all members = 0
+- **Global expense conservation:** sum of all expense balances across all members = 0
+- **Settlement conservation:** from/to cancel out, net zero
+- **Full conservation:** combined expenses + settlements = 0
+- **Delta laws:** exact effect of adding expense/settlement on member balances
+
+To regenerate after TS changes: `npx tsx ../lemmascript/tools/src/lsc.ts regen --backend=dafny src/logic/logic.ts`
 
 ## How It Works
 
