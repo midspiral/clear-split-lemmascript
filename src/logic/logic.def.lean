@@ -8,6 +8,7 @@ set_option loom.semantics.termination "total"
 set_option loom.semantics.choice "demonic"
 
 method sumTo (arr : Array Int) (n : Nat) return (res : Int)
+  require n ≤ arr.size
   do
     return Pure.sumTo arr n
 
@@ -29,6 +30,7 @@ method validExpense (e : Expense) (memberCount : Nat) return (res : Bool)
     return Pure.validExpense e memberCount
 
 method allExpensesValid (expenses : Array Expense) (n : Nat) (memberCount : Nat) return (res : Bool)
+  require n ≤ expenses.size
   do
     return Pure.allExpensesValid expenses n memberCount
 
@@ -37,6 +39,7 @@ method validSettlement (s : Settlement) (memberCount : Nat) return (res : Bool)
     return Pure.validSettlement s memberCount
 
 method allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount : Nat) return (res : Bool)
+  require n ≤ settlements.size
   do
     return Pure.allSettlementsValid settlements n memberCount
 
@@ -45,6 +48,12 @@ method inv (model : Model) return (res : Bool)
     return Pure.inv model
 
 method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (settFrom : Array Int) (settTo : Array Int) (settAmounts : Array Int) (member : Nat) (expenseCount : Nat) (settlementCount : Nat) return (res : Int)
+  require expenseCount ≤ paidBy.size
+  require expenseCount ≤ amounts.size
+  require expenseCount ≤ shares.size
+  require settlementCount ≤ settFrom.size
+  require settlementCount ≤ settTo.size
+  require settlementCount ≤ settAmounts.size
   do
     let mut balance : Int := 0
     let mut i : Nat := 0

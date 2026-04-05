@@ -34,6 +34,7 @@ export interface Model {
 //@ pure
 function sumTo(arr: number[], n: number): number {
   //@ type n nat
+  //@ requires n <= arr.length
   if (n === 0) return 0;
   return sumTo(arr, n - 1) + arr[n - 1];
 }
@@ -69,6 +70,7 @@ function validExpense(e: Expense, memberCount: number): boolean {
 function allExpensesValid(expenses: Expense[], n: number, memberCount: number): boolean {
   //@ type n nat
   //@ type memberCount nat
+  //@ requires n <= expenses.length
   if (n === 0) return true;
   return validExpense(expenses[n - 1], memberCount) && allExpensesValid(expenses, n - 1, memberCount);
 }
@@ -83,6 +85,7 @@ function validSettlement(s: Settlement, memberCount: number): boolean {
 function allSettlementsValid(settlements: Settlement[], n: number, memberCount: number): boolean {
   //@ type n nat
   //@ type memberCount nat
+  //@ requires n <= settlements.length
   if (n === 0) return true;
   return validSettlement(settlements[n - 1], memberCount) && allSettlementsValid(settlements, n - 1, memberCount);
 }
@@ -115,6 +118,12 @@ export function computeBalance(
   //@ type settlementCount nat
   //@ type i nat
   //@ type j nat
+  //@ requires expenseCount <= paidBy.length
+  //@ requires expenseCount <= amounts.length
+  //@ requires expenseCount <= shares.length
+  //@ requires settlementCount <= settFrom.length
+  //@ requires settlementCount <= settTo.length
+  //@ requires settlementCount <= settAmounts.length
   let balance = 0;
 
   let i = 0;
