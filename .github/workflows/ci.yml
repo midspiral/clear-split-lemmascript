@@ -75,6 +75,9 @@ jobs:
       - name: Regenerate and verify Dafny
         run: ../LemmaScript/tools/check.sh dafny
 
+      - name: Verify extra Dafny files
+        run: ./check-extra.sh
+
       - name: Check generated files are up to date
         run: |
           git diff --exit-code -- '*.dfy.gen' '*.dfy'
