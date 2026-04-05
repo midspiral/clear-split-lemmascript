@@ -2,7 +2,7 @@ import Lake
 open Lake DSL System
 
 require Velvet from ".." / "velvet"
-require LemmaScript from ".." / "lemmascript"
+require LemmaScript from ".." / "LemmaScript"
 
 package ClearSplitLemmaScript where
   leanOptions := #[⟨`pp.unicode.fun, true⟩]
