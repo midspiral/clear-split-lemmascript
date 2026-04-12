@@ -89,7 +89,7 @@ def step (model : Model) (action : Action) : Model :=
             if sumTo e.shares model.memberCount ≠ e.amount then
               model
             else
-              { memberCount := model.memberCount, expenses := Array.push model.expenses e, settlements := model.settlements }
+              { memberCount := model.memberCount, expenses := model.expenses ++ #[e], settlements := model.settlements }
   | .addSettlement _settlement =>
     let s := _settlement
     if s.«from» < 0 then
@@ -110,6 +110,6 @@ def step (model : Model) (action : Action) : Model :=
               if s.amount < 0 then
                 model
               else
-                { memberCount := model.memberCount, expenses := model.expenses, settlements := Array.push model.settlements s }
+                { memberCount := model.memberCount, expenses := model.expenses, settlements := model.settlements ++ #[s] }
 
 end Pure
