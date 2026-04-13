@@ -72,8 +72,8 @@ def inv (model : Model) : Bool :=
 
 def step (model : Model) (action : Action) : Model :=
   match action with
-  | .addExpense _expense =>
-    let e := _expense
+  | .addExpense _action_expense =>
+    let e := _action_expense
     if e.paidBy < 0 then
       model
     else
@@ -90,8 +90,8 @@ def step (model : Model) (action : Action) : Model :=
               model
             else
               { memberCount := model.memberCount, expenses := model.expenses ++ #[e], settlements := model.settlements }
-  | .addSettlement _settlement =>
-    let s := _settlement
+  | .addSettlement _action_settlement =>
+    let s := _action_settlement
     if s.«from» < 0 then
       model
     else
