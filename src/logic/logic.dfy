@@ -86,8 +86,8 @@ function step(model: Model, action: Action): Model
   requires inv(model)
 {
   match action {
-    case addExpense(i_expense) =>
-      var e := i_expense;
+    case addExpense(i_action_expense) =>
+      var e := i_action_expense;
       if (e.paidBy < 0) then
         model
       else
@@ -104,8 +104,8 @@ function step(model: Model, action: Action): Model
                 model
               else
                 Model(model.memberCount, (model.expenses + [e]), model.settlements)
-    case addSettlement(i_settlement) =>
-      var s := i_settlement;
+    case addSettlement(i_action_settlement) =>
+      var s := i_action_settlement;
       if (s.from < 0) then
         model
       else
