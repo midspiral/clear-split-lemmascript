@@ -57,10 +57,7 @@ function validExpense(e: Expense, memberCount: nat): bool
 function allExpensesValid(expenses: seq<Expense>, n: nat, memberCount: nat): bool
   requires (n <= |expenses|)
 {
-  if (n == 0) then
-    true
-  else
-    (validExpense(expenses[(n - 1)], memberCount) && allExpensesValid(expenses, (n - 1), memberCount))
+  ((n == 0) || (validExpense(expenses[(n - 1)], memberCount) && allExpensesValid(expenses, (n - 1), memberCount)))
 }
 
 function validSettlement(s: Settlement, memberCount: nat): bool
@@ -71,10 +68,7 @@ function validSettlement(s: Settlement, memberCount: nat): bool
 function allSettlementsValid(settlements: seq<Settlement>, n: nat, memberCount: nat): bool
   requires (n <= |settlements|)
 {
-  if (n == 0) then
-    true
-  else
-    (validSettlement(settlements[(n - 1)], memberCount) && allSettlementsValid(settlements, (n - 1), memberCount))
+  ((n == 0) || (validSettlement(settlements[(n - 1)], memberCount) && allSettlementsValid(settlements, (n - 1), memberCount)))
 }
 
 function inv(model: Model): bool
