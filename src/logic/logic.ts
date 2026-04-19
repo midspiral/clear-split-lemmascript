@@ -91,7 +91,7 @@ function allSettlementsValid(settlements: Settlement[], n: number, memberCount: 
 }
 
 //@ pure
-function inv(model: Model): boolean {
+export function inv(model: Model): boolean {
   return allExpensesValid(model.expenses, model.expenses.length, model.memberCount)
     && allSettlementsValid(model.settlements, model.settlements.length, model.memberCount);
 }
