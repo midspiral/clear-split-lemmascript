@@ -9,6 +9,27 @@ prove_correct expenseDelta by
 prove_correct settlementDelta by
   unfold Pure.settlementDelta; loom_solve
 
+-- Step lemmas so loom_solve can discharge computeBalance's loop invariants.
+attribute [grind, loomAbstractionSimp] Pure.balanceOverExpenses Pure.balanceOverSettlements
+
+@[simp, grind, loomAbstractionSimp]
+theorem balanceOverExpenses_step
+    (paidBy amounts shares : Array Int) (member : Int) (i : Nat) :
+    Pure.balanceOverExpenses paidBy amounts shares member (i + 1) =
+    Pure.balanceOverExpenses paidBy amounts shares member i
+      + Pure.expenseDelta paidBy[i]! amounts[i]! shares[i]! member := by
+  conv_lhs => unfold Pure.balanceOverExpenses
+  simp [show ¬(i + 1 = 0) from by omega, show i + 1 - 1 = i from by omega]
+
+@[simp, grind, loomAbstractionSimp]
+theorem balanceOverSettlements_step
+    (settFrom settTo settAmounts : Array Int) (member : Int) (j : Nat) :
+    Pure.balanceOverSettlements settFrom settTo settAmounts member (j + 1) =
+    Pure.balanceOverSettlements settFrom settTo settAmounts member j
+      + Pure.settlementDelta settFrom[j]! settTo[j]! settAmounts[j]! member := by
+  conv_lhs => unfold Pure.balanceOverSettlements
+  simp [show ¬(j + 1 = 0) from by omega, show j + 1 - 1 = j from by omega]
+
 prove_correct computeBalance by
   loom_solve
 

@@ -49,6 +49,18 @@ def settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : Int
     else
       0
 
+def balanceOverExpenses (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (member : Int) (n : Nat) : Int :=
+  if n = 0 then
+    0
+  else
+    balanceOverExpenses paidBy amounts shares member (n - 1) + expenseDelta paidBy[n - 1]! amounts[n - 1]! shares[n - 1]! member
+
+def balanceOverSettlements (settFrom : Array Int) (settTo : Array Int) (settAmounts : Array Int) (member : Int) (n : Nat) : Int :=
+  if n = 0 then
+    0
+  else
+    balanceOverSettlements settFrom settTo settAmounts member (n - 1) + settlementDelta settFrom[n - 1]! settTo[n - 1]! settAmounts[n - 1]! member
+
 def validExpense (e : Expense) (memberCount : Nat) : Bool :=
   e.paidBy ≥ 0 ∧ e.paidBy < memberCount ∧ e.amount ≥ 0 ∧ (e.shares).size = memberCount ∧ sumTo e.shares memberCount = e.amount
 

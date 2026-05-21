@@ -25,6 +25,20 @@ method settlementDelta («from» : Int) («to» : Int) (amount : Int) (member : 
   do
     return Pure.settlementDelta «from» «to» amount member
 
+method balanceOverExpenses (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (member : Int) (n : Nat) return (res : Int)
+  require n ≤ paidBy.size
+  require n ≤ amounts.size
+  require n ≤ shares.size
+  do
+    return Pure.balanceOverExpenses paidBy amounts shares member n
+
+method balanceOverSettlements (settFrom : Array Int) (settTo : Array Int) (settAmounts : Array Int) (member : Int) (n : Nat) return (res : Int)
+  require n ≤ settFrom.size
+  require n ≤ settTo.size
+  require n ≤ settAmounts.size
+  do
+    return Pure.balanceOverSettlements settFrom settTo settAmounts member n
+
 method validExpense (e : Expense) (memberCount : Nat) return (res : Bool)
   do
     return Pure.validExpense e memberCount
@@ -54,11 +68,13 @@ method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array
   require settlementCount ≤ settFrom.size
   require settlementCount ≤ settTo.size
   require settlementCount ≤ settAmounts.size
+  ensures res = Pure.balanceOverExpenses paidBy amounts shares member expenseCount + Pure.balanceOverSettlements settFrom settTo settAmounts member settlementCount
   do
     let mut balance : Int := 0
     let mut i : Nat := 0
     while i < expenseCount
       invariant i ≤ expenseCount
+      invariant balance = Pure.balanceOverExpenses paidBy amounts shares member i
       decreasing expenseCount - i
     do
       let _t0 ← expenseDelta paidBy[i]! amounts[i]! shares[i]! member
@@ -67,6 +83,7 @@ method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array
     let mut j : Nat := 0
     while j < settlementCount
       invariant j ≤ settlementCount
+      invariant balance = Pure.balanceOverExpenses paidBy amounts shares member expenseCount + Pure.balanceOverSettlements settFrom settTo settAmounts member j
       decreasing settlementCount - j
     do
       let _t1 ← settlementDelta settFrom[j]! settTo[j]! settAmounts[j]! member

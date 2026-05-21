@@ -57,6 +57,28 @@ function settlementDelta(from: number, to: number, amount: number, member: numbe
   return 0;
 }
 
+//@ pure
+function balanceOverExpenses(paidBy: number[], amounts: number[], shares: number[], member: number, n: number): number {
+  //@ type n nat
+  //@ requires n <= paidBy.length
+  //@ requires n <= amounts.length
+  //@ requires n <= shares.length
+  if (n === 0) return 0;
+  return balanceOverExpenses(paidBy, amounts, shares, member, n - 1)
+    + expenseDelta(paidBy[n - 1], amounts[n - 1], shares[n - 1], member);
+}
+
+//@ pure
+function balanceOverSettlements(settFrom: number[], settTo: number[], settAmounts: number[], member: number, n: number): number {
+  //@ type n nat
+  //@ requires n <= settFrom.length
+  //@ requires n <= settTo.length
+  //@ requires n <= settAmounts.length
+  if (n === 0) return 0;
+  return balanceOverSettlements(settFrom, settTo, settAmounts, member, n - 1)
+    + settlementDelta(settFrom[n - 1], settTo[n - 1], settAmounts[n - 1], member);
+}
+
 // ── Invariant predicates ────────────────────────────────────
 
 //@ pure
@@ -124,12 +146,14 @@ export function computeBalance(
   //@ requires settlementCount <= settFrom.length
   //@ requires settlementCount <= settTo.length
   //@ requires settlementCount <= settAmounts.length
+  //@ ensures \result === balanceOverExpenses(paidBy, amounts, shares, member, expenseCount) + balanceOverSettlements(settFrom, settTo, settAmounts, member, settlementCount)
   let balance = 0;
 
   let i = 0;
   while (i < expenseCount) {
     //@ decreases expenseCount - i
     //@ invariant i <= expenseCount
+    //@ invariant balance === balanceOverExpenses(paidBy, amounts, shares, member, i)
     balance += expenseDelta(paidBy[i], amounts[i], shares[i], member);
     i++;
   }
@@ -138,6 +162,7 @@ export function computeBalance(
   while (j < settlementCount) {
     //@ decreases settlementCount - j
     //@ invariant j <= settlementCount
+    //@ invariant balance === balanceOverExpenses(paidBy, amounts, shares, member, expenseCount) + balanceOverSettlements(settFrom, settTo, settAmounts, member, j)
     balance += settlementDelta(settFrom[j], settTo[j], settAmounts[j], member);
     j++;
   }
