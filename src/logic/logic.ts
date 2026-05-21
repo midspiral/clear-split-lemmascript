@@ -118,6 +118,13 @@ export function inv(model: Model): boolean {
     && allSettlementsValid(model.settlements, model.settlements.length, model.memberCount);
 }
 
+//@ pure
+export function validAction(a: Action, memberCount: number): boolean {
+  //@ type memberCount nat
+  if (a.tag === 'addExpense') return validExpense(a.expense, memberCount);
+  return validSettlement(a.settlement, memberCount);
+}
+
 // ── Verified operations ─────────────────────────────────────
 
 /**
@@ -177,6 +184,8 @@ export function computeBalance(
 export function step(model: Model, action: Action): Model {
   //@ requires inv(model)
   //@ ensures inv(\result)
+  //@ ensures !validAction(action, model.memberCount) ==> \result === model
+  //@ ensures \result.memberCount === model.memberCount
   if (action.tag === 'addExpense') {
     const e = action.expense;
     if (e.paidBy < 0) return model;

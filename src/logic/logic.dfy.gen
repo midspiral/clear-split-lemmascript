@@ -98,6 +98,16 @@ function inv(model: Model): bool
   (allExpensesValid(model.expenses, |model.expenses|, model.memberCount) && allSettlementsValid(model.settlements, |model.settlements|, model.memberCount))
 }
 
+function validAction(a: Action, memberCount: nat): bool
+{
+  match a {
+    case addExpense(i_a_expense) =>
+      validExpense(i_a_expense, memberCount)
+    case addSettlement(i_a_settlement) =>
+      validSettlement(i_a_settlement, memberCount)
+  }
+}
+
 function step(model: Model, action: Action): Model
   requires inv(model)
 {
@@ -147,6 +157,8 @@ function step(model: Model, action: Action): Model
 lemma step_ensures(model: Model, action: Action)
   requires inv(model)
   ensures inv(step(model, action))
+  ensures (!(validAction(action, model.memberCount)) ==> (step(model, action) == model))
+  ensures (step(model, action).memberCount == model.memberCount)
 {
 }
 

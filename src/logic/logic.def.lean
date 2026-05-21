@@ -61,6 +61,10 @@ method inv (model : Model) return (res : Bool)
   do
     return Pure.inv model
 
+method validAction (a : Action) (memberCount : Nat) return (res : Bool)
+  do
+    return Pure.validAction a memberCount
+
 method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array Int) (settFrom : Array Int) (settTo : Array Int) (settAmounts : Array Int) (member : Nat) (expenseCount : Nat) (settlementCount : Nat) return (res : Int)
   require expenseCount ≤ paidBy.size
   require expenseCount ≤ amounts.size
@@ -94,5 +98,7 @@ method computeBalance (paidBy : Array Int) (amounts : Array Int) (shares : Array
 method step (model : Model) (action : Action) return (res : Model)
   require Pure.inv model
   ensures Pure.inv res
+  ensures ¬(Pure.validAction action model.memberCount) → res = model
+  ensures res.memberCount = model.memberCount
   do
     return Pure.step model action

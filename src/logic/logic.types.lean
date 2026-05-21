@@ -82,6 +82,13 @@ def allSettlementsValid (settlements : Array Settlement) (n : Nat) (memberCount 
 def inv (model : Model) : Bool :=
   allExpensesValid model.expenses (model.expenses).size model.memberCount ∧ allSettlementsValid model.settlements (model.settlements).size model.memberCount
 
+def validAction (a : Action) (memberCount : Nat) : Bool :=
+  match a with
+  | .addExpense _a_expense =>
+    validExpense _a_expense memberCount
+  | .addSettlement _a_settlement =>
+    validSettlement _a_settlement memberCount
+
 def step (model : Model) (action : Action) : Model :=
   match action with
   | .addExpense _action_expense =>

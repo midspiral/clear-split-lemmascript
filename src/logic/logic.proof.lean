@@ -109,30 +109,50 @@ theorem allSettlementsValid_push (settlements : Array Settlement) (s : Settlemen
 
 section StepProof
 set_option maxHeartbeats 400000
-set_option loom.solver "custom"
-set_option hygiene false in
-macro_rules
-| `(tactic|loom_solver) => `(tactic| first
-  | grind
-  | omega
-  | (cases action with
-     | addExpense e => simp_all [Pure.inv, Pure.validExpense, allExpensesValid_push]; omega
-     | addSettlement s => simp_all [Pure.inv, Pure.validSettlement, allSettlementsValid_push]; omega))
 prove_correct step by
   unfold Pure.step
-  loom_solve
-  -- remaining goal: inv preserved
-  cases action with
-  | addExpense e =>
-    simp only [Pure.inv, Pure.validExpense] at *
-    split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
-    (rw [show model.expenses.size + 1 = (model.expenses.push e).size from by simp [Array.size_push]];
-     exact allExpensesValid_push model.expenses e model.memberCount (by tauto) (by simp [Pure.validExpense]; tauto))
-  | addSettlement s =>
-    simp only [Pure.inv, Pure.validSettlement] at *
-    split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
-    (rw [show model.settlements.size + 1 = (model.settlements.push s).size from by simp [Array.size_push]];
-     exact allSettlementsValid_push model.settlements s model.memberCount (by tauto) (by simp [Pure.validSettlement]; omega))
+  loom_goals_intro
+  all_goals strip_withname
+  all_goals (try unfold WithName at *)
+  -- Handle each leftover VC: memberCount (rfl), !validAction → result = model, inv preservation.
+  all_goals (first
+    | rfl
+    -- ensures_2: !validAction → result = model. The action has already been split
+    -- by wpgen, and we're either in a reject sub-case (rfl) or accept sub-case
+    -- (path conditions hold, so validAction = true, contradicting h).
+    -- ensures_2: !validAction → result = model. We need an implication to introduce.
+    -- After cases + split_ifs, each reject sub-case is `model = model` (rfl) and the
+    -- accept sub-case derives False because path conditions prove validAction = true.
+    | (intro h
+       try cases action
+       all_goals dsimp only
+       all_goals (try split_ifs)
+       all_goals (first
+         | rfl
+         | (exfalso
+            apply h
+            first
+              | (simp [Pure.validAction, Pure.validExpense]
+                 refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> omega)
+              | (simp [Pure.validAction, Pure.validSettlement]
+                 refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega))))
+    -- ensures_3: inv preservation, per-action handling
+    | (cases action with
+       | addExpense e =>
+         simp only [Pure.inv, Pure.validExpense] at *
+         split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> simp_all <;>
+         (rw [show model.expenses.size + 1 = (model.expenses.push e).size from by
+                simp [Array.size_push]];
+          exact allExpensesValid_push model.expenses e model.memberCount (by tauto)
+                (by simp [Pure.validExpense]; tauto))
+       | addSettlement s =>
+         simp only [Pure.inv, Pure.validSettlement] at *
+         split <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;> (try split) <;>
+           simp_all <;>
+         (rw [show model.settlements.size + 1 = (model.settlements.push s).size from by
+                simp [Array.size_push]];
+          exact allSettlementsValid_push model.settlements s model.memberCount (by tauto)
+                (by simp [Pure.validSettlement]; omega))))
 end StepProof
 
 -- ═════════════════════════════════════════════════════════════���
