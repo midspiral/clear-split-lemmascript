@@ -58,7 +58,7 @@ function settlementDelta(from: number, to: number, amount: number, member: numbe
 }
 
 //@ pure
-function balanceOverExpenses(paidBy: number[], amounts: number[], shares: number[], member: number, n: number): number {
+export function balanceOverExpenses(paidBy: number[], amounts: number[], shares: number[], member: number, n: number): number {
   //@ type n nat
   //@ requires n <= paidBy.length
   //@ requires n <= amounts.length
@@ -69,7 +69,7 @@ function balanceOverExpenses(paidBy: number[], amounts: number[], shares: number
 }
 
 //@ pure
-function balanceOverSettlements(settFrom: number[], settTo: number[], settAmounts: number[], member: number, n: number): number {
+export function balanceOverSettlements(settFrom: number[], settTo: number[], settAmounts: number[], member: number, n: number): number {
   //@ type n nat
   //@ requires n <= settFrom.length
   //@ requires n <= settTo.length

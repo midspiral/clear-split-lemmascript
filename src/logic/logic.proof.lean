@@ -9,10 +9,8 @@ prove_correct expenseDelta by
 prove_correct settlementDelta by
   unfold Pure.settlementDelta; loom_solve
 
--- Step lemmas so loom_solve can discharge computeBalance's loop invariants.
-attribute [grind, loomAbstractionSimp] Pure.balanceOverExpenses Pure.balanceOverSettlements
-
-@[simp, grind, loomAbstractionSimp]
+-- Step lemmas for the recursive spec helpers, used to discharge
+-- computeBalance's loop invariants via grind hints below.
 theorem balanceOverExpenses_step
     (paidBy amounts shares : Array Int) (member : Int) (i : Nat) :
     Pure.balanceOverExpenses paidBy amounts shares member (i + 1) =
@@ -21,7 +19,6 @@ theorem balanceOverExpenses_step
   conv_lhs => unfold Pure.balanceOverExpenses
   simp [show ¬(i + 1 = 0) from by omega, show i + 1 - 1 = i from by omega]
 
-@[simp, grind, loomAbstractionSimp]
 theorem balanceOverSettlements_step
     (settFrom settTo settAmounts : Array Int) (member : Int) (j : Nat) :
     Pure.balanceOverSettlements settFrom settTo settAmounts member (j + 1) =
@@ -30,8 +27,30 @@ theorem balanceOverSettlements_step
   conv_lhs => unfold Pure.balanceOverSettlements
   simp [show ¬(j + 1 = 0) from by omega, show j + 1 - 1 = j from by omega]
 
+-- balanceOverExpenses ... 0 = 0 (and same for settlements) — for init VCs.
+theorem balanceOverExpenses_zero (paidBy amounts shares : Array Int) (member : Int) :
+    Pure.balanceOverExpenses paidBy amounts shares member 0 = 0 := by
+  unfold Pure.balanceOverExpenses; simp
+
+theorem balanceOverSettlements_zero (settFrom settTo settAmounts : Array Int) (member : Int) :
+    Pure.balanceOverSettlements settFrom settTo settAmounts member 0 = 0 := by
+  unfold Pure.balanceOverSettlements; simp
+
 prove_correct computeBalance by
-  loom_solve
+  loom_goals_intro
+  all_goals strip_withname
+  all_goals (try unfold WithName at *)
+  all_goals (first
+    | (have h := balanceOverExpenses_step paidBy amounts shares ↑member i
+       simp only [Pure.expenseDelta] at h
+       grind)
+    | (have h := balanceOverSettlements_step settFrom settTo settAmounts ↑member j
+       simp only [Pure.settlementDelta] at h
+       grind)
+    | (have h := balanceOverExpenses_zero paidBy amounts shares ↑member; grind)
+    | (have h := balanceOverSettlements_zero settFrom settTo settAmounts ↑member; grind)
+    | grind
+    | omega)
 
 -- Helper: pushing a valid expense preserves allExpensesValid
 -- Key lemma: arr.push e at index < arr.size equals arr at that index
