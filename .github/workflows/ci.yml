@@ -11,95 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
-
-      - name: Install project dependencies
-        run: npm ci
-
-      - name: TypeScript typecheck
-        run: npm run typecheck
-
-  lean:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Clone LemmaScript
-        run: git clone https://github.com/midspiral/LemmaScript.git ../LemmaScript
-
-      - name: Clone Velvet fork
-        run: git clone https://github.com/namin/velvet.git -b lemma ../velvet
-
-      - name: Clone Loom fork
-        run: git clone https://github.com/namin/loom.git -b lemma ../loom
-
-      - name: Install LemmaScript tools
-        run: cd ../LemmaScript/tools && npm ci
-
-      - uses: leanprover/lean-action@v1
-        with:
-          use-github-cache: true
-
-      - name: Regenerate and build Lean
-        run: ../LemmaScript/tools/check.sh lean
-
-      - name: Check generated files are up to date
-        run: |
-          git diff --exit-code -- '*.def.lean' '*.types.lean'
-          untracked=$(git ls-files --others --exclude-standard -- '*.def.lean' '*.types.lean')
-          if [ -n "$untracked" ]; then
-            echo "ERROR: Untracked generated Lean files:"
-            echo "$untracked"
-            exit 1
-          fi
+      - run: npm ci
+      - run: npm run typecheck
 
   dafny:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
+    uses: midspiral/LemmaScript/.github/workflows/verify.yml@main
+    with:
+      backend: dafny
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-
-      - name: Clone LemmaScript
-        run: git clone https://github.com/midspiral/LemmaScript.git ../LemmaScript
-
-      - name: Install LemmaScript tools
-        run: cd ../LemmaScript/tools && npm ci
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Setup Dafny
-        uses: dafny-lang/setup-dafny-action@v1
-        with:
-          dafny-version: '4.11.0'
-
-      - name: Regenerate and verify Dafny
-        run: ../LemmaScript/tools/check.sh dafny
-
-      - name: Verify extra Dafny files
-        run: ./check-extra.sh
-
-      - name: Check generated files are up to date
-        run: |
-          git diff --exit-code -- '*.dfy.gen' '*.dfy'
-          untracked=$(git ls-files --others --exclude-standard -- '*.dfy.gen')
-          if [ -n "$untracked" ]; then
-            echo "ERROR: Untracked generated Dafny files:"
-            echo "$untracked"
-            exit 1
-          fi
+  lean:
+    uses: midspiral/LemmaScript/.github/workflows/verify.yml@main
+    with:
+      backend: lean
