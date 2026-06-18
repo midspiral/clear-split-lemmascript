@@ -2,7 +2,6 @@
 
 [![LemmaScript verified](https://img.shields.io/github/actions/workflow/status/midspiral/clear-split-lemmascript/ci.yml?branch=main&label=LemmaScript%20verified)](https://github.com/midspiral/clear-split-lemmascript/actions/workflows/ci.yml)
 
-
 A group expense splitting app with formally verified balance logic, built with [LemmaScript](https://github.com/midspiral/LemmaScript) and React.
 
 This is a greenfield reimplementation of the [Dafny ClearSplit](https://github.com/metareflection/dafny-replay/tree/main/clear-split) using LemmaScript — the TypeScript is both the implementation and the verified source. No compilation bridge, no BigNumber.js.
